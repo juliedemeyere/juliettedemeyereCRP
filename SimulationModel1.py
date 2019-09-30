@@ -32,7 +32,7 @@ t = 0
 #robots = (['Robot1', 0], ['Robot2', 0], ['Robot3', 0], ['Robot4', 0], ['Robot5', 0], ['Robot6', 0], ['Robot7', 0], ['Robot8', 0], ['Robot9', 0], ['Robot10', 0], ['Robot11', 0], ['Robot12', 0], ['Robot13', 0], ['Robot14', 0])
 
 robots = ('Robot 1', 'Robot 2', 'Robot 3', 'Robot 4', 'Robot 5', 'Robot 6', 'Robot 7', 'Robot 8', 'Robot 9', 'Robot 10', 'Robot 11', 'Robot 12', 'Robot 13', 'Robot 14')
-F = 8 # Specify here the amount of robots per workstation to initialize [robot number, arrival at workstation]
+F = 2 # Specify here the amount of robots per workstation to initialize [robot number, arrival at workstation]
 
 
 Robots_WS1 = []
@@ -50,7 +50,7 @@ for i in range(0,F):
     z4 = [robots[i], 0, 4]
     Robots_WS4.append(z4)
     z5 = [robots[i], 0, 5]
-    Robots_WS1.append(z5)
+    Robots_WS5.append(z5)
 
 
 TimeWaitedInQueue_WS1 =[]
@@ -87,30 +87,6 @@ Xlength = 90
 Ylength = 37
 crossaisles = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90] # relevant for x intersections
 aisles = [0, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 37] # relevant for y intersections
-#def ZeroOrOneGenerator(probability):
-#    value = random.randint(1,101)
-#    if value <= probability:
-#        n = 1
-#    else:
-#        n = 0
-#    return n
-
-#def PodMatrixGenerator(probability):
-#    matrix = []
-#    for i in range(Ylength+1):
-#        aislerow = []
-#        if i in aisles:
-#            for x in range(Xlength+1):
-#                aislerow.append(0)
-#        else:
-#            for x in range(Xlength+1):
-#                if x in crossaisles:
-#                    aislerow.append(0)
-#                else:
-#                    m = ZeroOrOneGenerator(probability)
-#                    aislerow.append(m)
-#        matrix.append(aislerow)
-#    return matrix
 
 WS_Xlocation = {1:0, 2:17, 3:46, 4:74, 5:90}
 WS_Ylocation = {1:19, 2:0, 3:0, 4:0, 5:20}
@@ -121,9 +97,7 @@ def GenerateRobotDelay(PodMatrix, WS):
     y = WS_Ylocation[WS]
     location = WS_direction[WS]
     Move3 = DistanceCalculator_Move3(x,y, location, PodMatrix)
-  #  PodMatrix[Move3[2]][Move3[1]] = 0
     Workfloor.MakeZero(Move3[1],Move3[2])
-  #  print(PodMatrix[Move3[2]][Move3[1]])
     Move1 = DistanceCalculator_Move1(x,y, location, PodMatrix)
     Workfloor.MakeOne(Move1[1],Move1[2])
     Move2 = DistanceCalculator_Move2(Move1[1],Move1[2], Move3[1], Move3[2])
@@ -133,12 +107,11 @@ def GenerateRobotDelay(PodMatrix, WS):
 
 
 Workfloor = PodMatrixClass()
-probability = 90
+probability = 85
 
 Workfloor.PodMatrixGenerator(probability) # generates a new podmatrix
 
 PodMatrix = Workfloor.Matrix
-print(len(PodMatrix))
 
 Workfloor.MakeZero(1,2)
 
@@ -154,8 +127,6 @@ StartServiceNext_WS2 = 0
 StartServiceNext_WS3 = 0
 StartServiceNext_WS4 = 0
 StartServiceNext_WS5 = 0
-third = int(0.9*T)
-twothird = int(0.66*T)
 
 while t < T:
     if len(Robots_Moving_WS1) > 0:
@@ -166,6 +137,14 @@ while t < T:
                 indexnumber = Robots_Moving_WS1.index(i)
                 Robots_Moving_WS1.remove(i)
                 Robots_WS1.append(AddingEvent)
+    if len(Robots_Moving_WS2) > 0:
+        for i in Robots_Moving_WS2:
+            ArrivalTime = i[1]
+            if t >= ArrivalTime: # schedule the arrival of the pods
+                AddingEvent = i
+                indexnumber = Robots_Moving_WS2.index(i)
+                Robots_Moving_WS2.remove(i)
+                Robots_WS2.append(AddingEvent)
     if len(Robots_Moving_WS3):
         for i in Robots_Moving_WS3:
             ArrivalTime = i[1]
@@ -174,6 +153,22 @@ while t < T:
                 indexnumber = Robots_Moving_WS3.index(i)
                 Robots_Moving_WS3.remove(i)
                 Robots_WS3.append(AddingEvent)
+    if len(Robots_Moving_WS4) > 0:
+        for i in Robots_Moving_WS4:
+            ArrivalTime = i[1]
+            if t >= ArrivalTime: # schedule the arrival of the pods
+                AddingEvent = i
+                indexnumber = Robots_Moving_WS4.index(i)
+                Robots_Moving_WS4.remove(i)
+                Robots_WS4.append(AddingEvent)
+    if len(Robots_Moving_WS5) > 0:
+        for i in Robots_Moving_WS5:
+            ArrivalTime = i[1]
+            if t >= ArrivalTime: # schedule the arrival of the pods
+                AddingEvent = i
+                indexnumber = Robots_Moving_WS5.index(i)
+                Robots_Moving_WS5.remove(i)
+                Robots_WS5.append(AddingEvent)
     if len(Robots_WS1) > 0:
         if t >= StartServiceNext_WS1:
             WS = 1
@@ -187,14 +182,33 @@ while t < T:
             TimeJobFinished_WS1.append(StartServiceNext_WS1)
             AmountofJobsFinished_WS1.append(1)
         
-            DT = GenerateRobotDelay(PodMatrix, WS)
+            DT = GenerateRobotDelay(Workfloor.Matrix, WS)
             DelayTime = DT[0]
-   #         PodMatrix = DT[1]
             ReturnTime = t + DelayTime
             CurrentEvent[1] = ReturnTime
             Robots_Moving_WS1.append(CurrentEvent)
             OrderCycleTimeJob_WS1 = QueueWaitingTime_WS1 + PickingTime + DelayTime
             OrderCycleTime_WS1.append(OrderCycleTimeJob_WS1)
+    if len(Robots_WS2) > 0:
+        if t >= StartServiceNext_WS2:
+            WS = 2
+            CurrentEvent = Robots_WS2[0]
+            QueueWaitingTime_WS2 = t - CurrentEvent[1] 
+            TimeWaitedInQueue_WS2.append(QueueWaitingTime_WS2)
+            TimesStartedService_WS2.append(t)
+            Robots_WS2.pop(0)
+            PickingTime = random.expovariate(1/15)
+            StartServiceNext_WS2 = t + PickingTime
+            TimeJobFinished_WS2.append(StartServiceNext_WS2)
+            AmountofJobsFinished_WS2.append(1)
+        
+            DT = GenerateRobotDelay(Workfloor.Matrix, WS)
+            DelayTime = DT[0]
+            ReturnTime = t + DelayTime
+            CurrentEvent[1] = ReturnTime
+            Robots_Moving_WS2.append(CurrentEvent)
+            OrderCycleTimeJob_WS2 = QueueWaitingTime_WS2 + PickingTime + DelayTime
+            OrderCycleTime_WS2.append(OrderCycleTimeJob_WS2)
     if len(Robots_WS3) > 0:
         if t > StartServiceNext_WS3:
             WS = 3
@@ -208,35 +222,54 @@ while t < T:
             TimeJobFinished_WS3.append(StartServiceNext_WS3)
             AmountofJobsFinished_WS3.append(1)
         
-            DT = GenerateRobotDelay(PodMatrix, WS)
+            DT = GenerateRobotDelay(Workfloor.Matrix, WS)
             DelayTime = DT[0]
-  #          PodMatrix = DT[1]
             ReturnTime = t + DelayTime
             CurrentEvent[1] = ReturnTime
             Robots_Moving_WS3.append(CurrentEvent)
             OrderCycleTimeJob_WS3 = QueueWaitingTime_WS3 + PickingTime + DelayTime
             OrderCycleTime_WS3.append(OrderCycleTimeJob_WS3)
-#    if t == third:
-#        Pmat1 = PodMatrix
-#    if t == twothird:
-#        Pmat2 = PodMatrix
+    if len(Robots_WS4) > 0:
+        if t > StartServiceNext_WS4:
+            WS = 4
+            CurrentEvent = Robots_WS4[0]
+            QueueWaitingTime_WS4 = t - CurrentEvent[1] 
+            TimeWaitedInQueue_WS4.append(QueueWaitingTime_WS4)
+            TimesStartedService_WS4.append(t)
+            Robots_WS4.pop(0)
+            PickingTime = random.expovariate(1/15)
+            StartServiceNext_WS4 = t + PickingTime
+            TimeJobFinished_WS4.append(StartServiceNext_WS4)
+            AmountofJobsFinished_WS4.append(1)
         
- #   print(PodMatrix[4])
+            DT = GenerateRobotDelay(Workfloor.Matrix, WS)
+            DelayTime = DT[0]
+            ReturnTime = t + DelayTime
+            CurrentEvent[1] = ReturnTime
+            Robots_Moving_WS4.append(CurrentEvent)
+            OrderCycleTimeJob_WS4 = QueueWaitingTime_WS4 + PickingTime + DelayTime
+            OrderCycleTime_WS4.append(OrderCycleTimeJob_WS4)
+    if len(Robots_WS5) > 0:
+        if t > StartServiceNext_WS5:
+            WS = 5
+            CurrentEvent = Robots_WS5[0]
+            QueueWaitingTime_WS5 = t - CurrentEvent[1] 
+            TimeWaitedInQueue_WS5.append(QueueWaitingTime_WS5)
+            TimesStartedService_WS5.append(t)
+            Robots_WS5.pop(0)
+            PickingTime = random.expovariate(1/15)
+            StartServiceNext_WS5 = t + PickingTime
+            TimeJobFinished_WS5.append(StartServiceNext_WS5)
+            AmountofJobsFinished_WS5.append(1)
+        
+            DT = GenerateRobotDelay(Workfloor.Matrix, WS)
+            DelayTime = DT[0]
+            ReturnTime = t + DelayTime
+            CurrentEvent[1] = ReturnTime
+            Robots_Moving_WS5.append(CurrentEvent)
+            OrderCycleTimeJob_WS5 = QueueWaitingTime_WS5 + PickingTime + DelayTime
+            OrderCycleTime_WS5.append(OrderCycleTimeJob_WS5)
     t = t+1
-#counter = 0
-#noncounter = 0
-#for i in range(0,len(PodMatrix)):
- #   print(Pmat1[i], Pmat2[i])
-#    if PodMatrix[i] == PodMatrixOriginal[i]:
-#        noncounter += 1
-#    else:
-#        counter += 1
-#print(counter, noncounter)
-        
-#        print('sisisi')
-#    else:
-#        print('no')
-  #  print(i)
 
 # In order to eliminate the warm up effect
 n = 30
@@ -246,32 +279,78 @@ del TimeJobFinished_WS3[:n]
 del AmountofJobsFinished_WS3[:n]
 del OrderCycleTime_WS3[:n]
 
+del TimeWaitedInQueue_WS2[:n]
+del TimesStartedService_WS2[:n]
+del TimeJobFinished_WS2[:n]
+del AmountofJobsFinished_WS2[:n]
+del OrderCycleTime_WS2[:n]
+
 del TimeWaitedInQueue_WS1[:n]
 del TimesStartedService_WS1[:n]
 del TimeJobFinished_WS1[:n]
 del AmountofJobsFinished_WS1[:n]
 del OrderCycleTime_WS1[:n]
 
+del TimeWaitedInQueue_WS4[:n]
+del TimesStartedService_WS4[:n]
+del TimeJobFinished_WS4[:n]
+del AmountofJobsFinished_WS4[:n]
+del OrderCycleTime_WS4[:n]
+
+del TimeWaitedInQueue_WS5[:n]
+del TimesStartedService_WS5[:n]
+del TimeJobFinished_WS5[:n]
+del AmountofJobsFinished_WS5[:n]
+del OrderCycleTime_WS5[:n]
+
 print('##Workstation 1:##')
-AverageWaitingTime = sum(TimeWaitedInQueue_WS1)/len(TimeWaitedInQueue_WS1)
-print('Average Waiting Time in Queue (s) :', AverageWaitingTime)
+AverageWaitingTime1 = sum(TimeWaitedInQueue_WS1)/len(TimeWaitedInQueue_WS1)
+print('Average Waiting Time in Queue (s) :', AverageWaitingTime1)
+AverageThroughputRate1 = sum(AmountofJobsFinished_WS1)/(T - 30)*60*60
+print('Average Throughput Rate (/hour):',AverageThroughputRate1)    
+AverageOrderCycleTime1 = sum(OrderCycleTime_WS1)/len(OrderCycleTime_WS1)
+print('Average order cycle time (s):', AverageOrderCycleTime1)
 
-AverageThroughputRate = sum(AmountofJobsFinished_WS1)/(T - 30)*60*60
-print('Average Throughput Rate (/hour):',AverageThroughputRate)    
-
-AverageOrderCycleTime = sum(OrderCycleTime_WS1)/len(OrderCycleTime_WS1)
-print('Average order cycle time (s):', AverageOrderCycleTime)
+print('##Workstation 2:##')
+AverageWaitingTime2 = sum(TimeWaitedInQueue_WS2)/len(TimeWaitedInQueue_WS2)
+print('Average Waiting Time in Queue (s) :', AverageWaitingTime2)
+AverageThroughputRate2 = sum(AmountofJobsFinished_WS2)/(T - 30)*60*60
+print('Average Throughput Rate (/hour):',AverageThroughputRate2)    
+AverageOrderCycleTime2 = sum(OrderCycleTime_WS2)/len(OrderCycleTime_WS2)
+print('Average order cycle time (s):', AverageOrderCycleTime2)
 
 print('##Workstation 3:##')
-AverageWaitingTime = sum(TimeWaitedInQueue_WS3)/len(TimeWaitedInQueue_WS3)
+AverageWaitingTime3 = sum(TimeWaitedInQueue_WS3)/len(TimeWaitedInQueue_WS3)
+print('Average Waiting Time in Queue (s) :', AverageWaitingTime3)
+AverageThroughputRate3 = sum(AmountofJobsFinished_WS3)/(T - 30)*60*60
+print('Average Throughput Rate (/hour):',AverageThroughputRate3)    
+AverageOrderCycleTime3 = sum(OrderCycleTime_WS3)/len(OrderCycleTime_WS3)
+print('Average order cycle time (s):', AverageOrderCycleTime3)
+
+print('##Workstation 4:##')
+AverageWaitingTime4 = sum(TimeWaitedInQueue_WS4)/len(TimeWaitedInQueue_WS4)
+print('Average Waiting Time in Queue (s) :', AverageWaitingTime4)
+AverageThroughputRate4 = sum(AmountofJobsFinished_WS4)/(T - 30)*60*60
+print('Average Throughput Rate (/hour):',AverageThroughputRate4)    
+AverageOrderCycleTime4 = sum(OrderCycleTime_WS4)/len(OrderCycleTime_WS4)
+print('Average order cycle time (s):', AverageOrderCycleTime4)
+
+print('##Workstation 5:##')
+AverageWaitingTime5 = sum(TimeWaitedInQueue_WS5)/len(TimeWaitedInQueue_WS5)
+print('Average Waiting Time in Queue (s) :', AverageWaitingTime5)
+AverageThroughputRate5 = sum(AmountofJobsFinished_WS5)/(T - 30)*60*60
+print('Average Throughput Rate (/hour):',AverageThroughputRate5)    
+AverageOrderCycleTime5 = sum(OrderCycleTime_WS5)/len(OrderCycleTime_WS5)
+print('Average order cycle time (s):', AverageOrderCycleTime5)
+
+print('#######################')
+print('Average all Workstations')
+AverageWaitingTime = (AverageWaitingTime1+AverageWaitingTime2+AverageWaitingTime3+AverageWaitingTime4+AverageWaitingTime5)/5
 print('Average Waiting Time in Queue (s) :', AverageWaitingTime)
-
-AverageThroughputRate = sum(AmountofJobsFinished_WS3)/(T - 30)*60*60
+AverageThroughputRate = (AverageThroughputRate1+AverageThroughputRate2+AverageThroughputRate3+AverageThroughputRate4+AverageThroughputRate5)/5
 print('Average Throughput Rate (/hour):',AverageThroughputRate)    
-
-AverageOrderCycleTime = sum(OrderCycleTime_WS3)/len(OrderCycleTime_WS3)
+AverageOrderCycleTime = (AverageOrderCycleTime1+AverageOrderCycleTime2+AverageOrderCycleTime3+AverageOrderCycleTime4+AverageOrderCycleTime5)/5
 print('Average order cycle time (s):', AverageOrderCycleTime)
-
 #plt.plot(TimesStartedService,TimeWaitedInQueue)
 #plt.xlabel('Time')
 #plt.ylabel('Time Waited in Queue')

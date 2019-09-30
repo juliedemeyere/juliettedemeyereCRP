@@ -47,26 +47,71 @@ def VerticalCoordinate():
             break
     return Y 
 
+def XYcoordinatesMove3(PodMatrix):
+    aisles = [0, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 37] 
+    crossaisles = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90] 
+    while True:
+        YCoordinate = random.randint(1,36)
+        XCoordinate = random.randint(1,89)
+        PodValue = PodMatrix[YCoordinate][XCoordinate]
+        if PodValue == 0:
+            pass
+        else:
+            Y = YCoordinate
+            X = XCoordinate
+            break
+    PodMatrix[Y][X] = 0
+    return X, Y, PodMatrix
+    
+def XYcoordinatesMove1(PodMatrix):
+    aisles = [0, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 37] 
+    crossaisles = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90] 
+    while True:
+        while True:
+            XCoordinate = random.randint(1,89)
+            if XCoordinate in crossaisles:
+                pass
+            else:
+                X = XCoordinate
+                break
+        while True:
+            YCoordinate = random.randint(1,36)
+            if YCoordinate in aisles:
+                pass
+            else:
+                Y = YCoordinate
+                break
+        PodValue = PodMatrix[YCoordinate][XCoordinate]
+        if PodValue == 1:
+            pass
+        else:
+            Y = YCoordinate
+            X = XCoordinate
+            break
+    PodMatrix[Y][X] = 1
+    return X, Y, PodMatrix
+    
 ' Case 1: WS east/west and first aisle it passes is in direction  east/west'
 ' Case 2: WS east/west and first aisle it passes is in direction  west/east'
 ' Case 3: WS north/south and first cross section it passes is in direction  north/south'
 ' Case 4: WS north/south and first cross section it passes is in direction south/north'
 
-def DistanceCalculator_Move3(Xws,Yws, Location): # Coordinates of WS, location (east/west/south/north)      
-    x = HorizontalCoordinate() # initialize coordinates
-    y = VerticalCoordinate()
+
+
+def DistanceCalculator_Move3(Xws,Yws, Location, PodMatrix): # Coordinates of WS, location (east/west/south/north)      
+
+    Move3 = XYcoordinatesMove3(PodMatrix)
+    x = Move3[0]
+    y = Move3[1]
+    PodMatrix = Move3[2]
     AisleTravelDirection = AisleInformation(y)[1]
- #   print('TravelDirection WS:', AisleTravelDirection)
- #   print('Coordinates:', x, y)
     if Location == 'West' or Location == 'East':
         if Location == AisleTravelDirection:
             Case = 1
             D = Case1CalculateDistance(x,y, Xws, Yws)
-  #          print('Distance Case 1:', D)
         else:
             Case = 2
             D = Case2CalculateDistance(x,y,Xws,Yws)
-  #          print('Distance Case 2:', D)
     elif Location == 'North' or Location == 'South':
         CrossAisleDirection = FindClosestCrossAisle(x,y)[0]
         if Location == CrossAisleDirection:
@@ -75,12 +120,16 @@ def DistanceCalculator_Move3(Xws,Yws, Location): # Coordinates of WS, location (
         else:
             Case = 4
             D = Case4CalculateDistance(x,y,Xws,Yws, Location)
- #   print('MOVE 3. Coordinates:(', x, y,')', 'Case:', Case, ',Distance:', D, 'TravelDirection WS:', AisleTravelDirection)
-    return D, x,y
+
+    return D, x,y, PodMatrix
                 
-def DistanceCalculator_Move1(Xws,Yws, Location):
-    x = HorizontalCoordinate() # initialize coordinates
-    y = VerticalCoordinate()
+def DistanceCalculator_Move1(Xws,Yws, Location, PodMatrix):
+ #   x = HorizontalCoordinate() # initialize coordinates
+ #   y = VerticalCoordinate()
+    Move1 = XYcoordinatesMove1(PodMatrix)
+    x = Move1[0]
+    y = Move1[1]
+    PodMatrix = Move1[2]
     AisleTraveldirectionPOD = AisleInformation(y)[1]
     AisleTravelDirectionWS = AisleInformation(Yws)[1]
     if Location == 'West' or Location == 'East': 
@@ -235,11 +284,11 @@ def CalculateTravelTime(Move1, Move2, Move3):
     T3 = D3/1.3
     return T1,T2,T3
 
-Move3 = DistanceCalculator_Move3(46,0, 'South')
-Move1 = DistanceCalculator_Move1(46,0, 'South')
-Move2 = DistanceCalculator_Move2(Move1[1],Move1[2], Move3[1], Move3[2])
+#Move3 = DistanceCalculator_Move3(46,0, 'South')
+#Move1 = DistanceCalculator_Move1(46,0, 'South')
+#Move2 = DistanceCalculator_Move2(Move1[1],Move1[2], Move3[1], Move3[2])
 
-CalculateTravelTime(Move1, Move2, Move3)
+#CalculateTravelTime(Move1, Move2, Move3)
 
 
 

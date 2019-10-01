@@ -60,7 +60,7 @@ def XYcoordinatesMove3(PodMatrix):
             Y = YCoordinate
             X = XCoordinate
             break
-    PodMatrix[Y][X] = 0
+   # PodMatrix[Y][X] = 0
     return X, Y, PodMatrix
     
 def XYcoordinatesMove1(PodMatrix):
@@ -88,7 +88,7 @@ def XYcoordinatesMove1(PodMatrix):
             Y = YCoordinate
             X = XCoordinate
             break
-    PodMatrix[Y][X] = 1
+  #  PodMatrix[Y][X] = 1
     return X, Y, PodMatrix
     
 ' Case 1: WS east/west and first aisle it passes is in direction  east/west'
@@ -99,7 +99,6 @@ def XYcoordinatesMove1(PodMatrix):
 
 
 def DistanceCalculator_Move3(Xws,Yws, Location, PodMatrix): # Coordinates of WS, location (east/west/south/north)      
-
     Move3 = XYcoordinatesMove3(PodMatrix)
     x = Move3[0]
     y = Move3[1]
@@ -120,12 +119,9 @@ def DistanceCalculator_Move3(Xws,Yws, Location, PodMatrix): # Coordinates of WS,
         else:
             Case = 4
             D = Case4CalculateDistance(x,y,Xws,Yws, Location)
-
-    return D, x,y, PodMatrix
+    return D, x,y
                 
 def DistanceCalculator_Move1(Xws,Yws, Location, PodMatrix):
- #   x = HorizontalCoordinate() # initialize coordinates
- #   y = VerticalCoordinate()
     Move1 = XYcoordinatesMove1(PodMatrix)
     x = Move1[0]
     y = Move1[1]
@@ -147,13 +143,10 @@ def DistanceCalculator_Move1(Xws,Yws, Location, PodMatrix):
         else:
             Case = 4
             D = Case4CalculateDistance(x,y,Xws,Yws, Location)
-   # print('MOVE 1. Coordinates:(', x, y,')', 'Case:', Case, ',Distance:', D, 'TravelDirection WS:', AisleTravelDirectionWS,'TravelDirection POD:', AisleTraveldirectionPOD )
     return D, x, y
         
 def DistanceCalculator_Move2(x1,y1, x3, y3): #simply the manhattan distance between two points
     D = abs(x1-x3) + abs(y1-y3)
-  #  print('(',x1,',',y1,') to (',x3,',',y3,'))')
-  #  print('MOVE 2: Distance', D)
     return D
     
         
@@ -192,7 +185,6 @@ def FindClosestCrossAisle(x, y):
 
 def Case2CalculateDistance(x,y,Xws,Yws): #the closest cross section that will be travelled to
     aisle = AisleInformation(y)
-    print(aisle, 'aisle')
     Yintersection = aisle[0]
     TravelDirection = aisle[1]
     distance = 100
@@ -233,7 +225,6 @@ def Case2CalculateDistance(x,y,Xws,Yws): #the closest cross section that will be
     else:
         DeltaLeWs = 0
     D = u + DleSi + abs(Xsi - Xws) + abs(Ysi - Yws) + DeltaLeWs
-  #  print('DleSi:', DleSi, ',Xsi:', Xsi, ',Xws:', Xws, ',Ysi', Ysi, ',Yws:', Yws, ',DeltaLeWs:', DeltaLeWs)
     return D
     
 
@@ -279,16 +270,10 @@ def CalculateTravelTime(Move1, Move2, Move3):
     D1 = Move1[0]
     D2 = Move2
     D3 = Move3[0]
-    T1 = D1/1.3
-    T2 = D2/1.3
-    T3 = D3/1.3
+    T1 = D1/1.3+1
+    T2 = D2/1.3+1
+    T3 = D3/1.3+1
     return T1,T2,T3
-
-#Move3 = DistanceCalculator_Move3(46,0, 'South')
-#Move1 = DistanceCalculator_Move1(46,0, 'South')
-#Move2 = DistanceCalculator_Move2(Move1[1],Move1[2], Move3[1], Move3[2])
-
-#CalculateTravelTime(Move1, Move2, Move3)
 
 
 

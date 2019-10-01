@@ -14,6 +14,8 @@ from MatrixFile import PodMatrixClass
 from collections import deque # Use deque because it is really fast
 import random
 import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
 
 
 # Initialize with four robots
@@ -24,7 +26,7 @@ Robots_Moving_WS4 = []
 Robots_Moving_WS5 = []
 
 
-N = 12 # amount of hours. Needs to be greater than 1 for warm up effect
+N = 168 # amount of hours. Needs to be greater than 1 for warm up effect
 T = 60*60*N # amount of time that the simulation is kept running, in seconds
 
 t = 0
@@ -32,7 +34,7 @@ t = 0
 #robots = (['Robot1', 0], ['Robot2', 0], ['Robot3', 0], ['Robot4', 0], ['Robot5', 0], ['Robot6', 0], ['Robot7', 0], ['Robot8', 0], ['Robot9', 0], ['Robot10', 0], ['Robot11', 0], ['Robot12', 0], ['Robot13', 0], ['Robot14', 0])
 
 robots = ('Robot 1', 'Robot 2', 'Robot 3', 'Robot 4', 'Robot 5', 'Robot 6', 'Robot 7', 'Robot 8', 'Robot 9', 'Robot 10', 'Robot 11', 'Robot 12', 'Robot 13', 'Robot 14')
-F = 2 # Specify here the amount of robots per workstation to initialize [robot number, arrival at workstation]
+F = 8 # Specify here the amount of robots per workstation to initialize [robot number, arrival at workstation]
 
 
 Robots_WS1 = []
@@ -351,6 +353,15 @@ AverageThroughputRate = (AverageThroughputRate1+AverageThroughputRate2+AverageTh
 print('Average Throughput Rate (/hour):',AverageThroughputRate)    
 AverageOrderCycleTime = (AverageOrderCycleTime1+AverageOrderCycleTime2+AverageOrderCycleTime3+AverageOrderCycleTime4+AverageOrderCycleTime5)/5
 print('Average order cycle time (s):', AverageOrderCycleTime)
+
+Results = pd.DataFrame(np.array([[(0,19), AverageWaitingTime1, AverageThroughputRate1, AverageOrderCycleTime1], 
+                                 [(17,0), AverageWaitingTime2, AverageThroughputRate2, AverageOrderCycleTime2],
+                                 [(46,0), AverageWaitingTime3, AverageThroughputRate3, AverageOrderCycleTime3],
+                                 [(74,0), AverageWaitingTime4, AverageThroughputRate4, AverageOrderCycleTime4],
+                                 [(90,20), AverageWaitingTime5, AverageThroughputRate5, AverageOrderCycleTime5],
+                                 ['Average', AverageWaitingTime, AverageThroughputRate, AverageOrderCycleTime]]),
+                       columns=['Coordinates', 'Queue Time (s)', 'Throughput Rate (/hour)', 'Order Cycle Time (s)'])
+
 #plt.plot(TimesStartedService,TimeWaitedInQueue)
 #plt.xlabel('Time')
 #plt.ylabel('Time Waited in Queue')

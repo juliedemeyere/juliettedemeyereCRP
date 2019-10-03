@@ -34,8 +34,31 @@ t = 0
 #robots = (['Robot1', 0], ['Robot2', 0], ['Robot3', 0], ['Robot4', 0], ['Robot5', 0], ['Robot6', 0], ['Robot7', 0], ['Robot8', 0], ['Robot9', 0], ['Robot10', 0], ['Robot11', 0], ['Robot12', 0], ['Robot13', 0], ['Robot14', 0])
 
 robots = ('Robot 1', 'Robot 2', 'Robot 3', 'Robot 4', 'Robot 5', 'Robot 6', 'Robot 7', 'Robot 8', 'Robot 9', 'Robot 10', 'Robot 11', 'Robot 12', 'Robot 13', 'Robot 14')
-F = 2 # Specify here the amount of robots per workstation to initialize [robot number, arrival at workstation]
-ArrivalRate = 31.68 # arrivalrate per hour
+
+
+TableNumber = 2 # write in the table from the paper you want to replicate
+
+if TableNumber == 2:
+    F = 2
+    ArrivalRate = 31.68
+elif TableNumber == 3:
+    F = 2
+    ArrivalRate = 14.40
+elif TableNumber == 4:
+    F = 8
+    ArrivalRate = 126.72
+elif TableNumber == 5:
+    F = 8
+    ArrivalRate = 57.60
+elif TableNumber == 6:
+    F = 14
+    ArrivalRate = 221.76
+elif TableNumber == 7:
+    F = 14
+    ArrivalRate = 100.80
+
+#F = 2 # Specify here the amount of robots per workstation to initialize [robot number, arrival at workstation]
+#ArrivalRate = 31.68 # arrivalrate per hour
 
 LengthBufferQueue = [[],[],[],[],[]]
 
@@ -564,6 +587,21 @@ Lo3 = sum(LengthBufferQueue[2])/len(LengthBufferQueue[2])
 Lo4 = sum(LengthBufferQueue[3])/len(LengthBufferQueue[3])
 Lo5 = sum(LengthBufferQueue[4])/len(LengthBufferQueue[4])
 
+
+WS1RobotAverageBusyTimes = (sum(WS1Delay[0]) + sum(WS1Delay[1]) + sum(WS1Delay[2]) + sum(WS1picking) + sum(TimeWaitedInQueue_WS1))/F
+WS2RobotAverageBusyTimes = (sum(WS2Delay[0]) + sum(WS2Delay[1]) + sum(WS2Delay[2]) + sum(WS2picking) + sum(TimeWaitedInQueue_WS2))/F
+WS3RobotAverageBusyTimes = (sum(WS3Delay[0]) + sum(WS3Delay[1]) + sum(WS3Delay[2]) + sum(WS3picking) + sum(TimeWaitedInQueue_WS3))/F
+WS4RobotAverageBusyTimes = (sum(WS4Delay[0]) + sum(WS4Delay[1]) + sum(WS4Delay[2]) + sum(WS4picking) + sum(TimeWaitedInQueue_WS4))/F
+WS5RobotAverageBusyTimes = (sum(WS5Delay[0]) + sum(WS5Delay[1]) + sum(WS5Delay[2]) + sum(WS5picking) + sum(TimeWaitedInQueue_WS5))/F
+
+WS1RobotBusy = WS1RobotAverageBusyTimes/T
+WS2RobotBusy = WS2RobotAverageBusyTimes/T
+WS3RobotBusy = WS3RobotAverageBusyTimes/T
+WS4RobotBusy = WS4RobotAverageBusyTimes/T
+WS5RobotBusy = WS5RobotAverageBusyTimes/T
+
+avBusy = round((WS1RobotBusy + WS2RobotBusy+WS3RobotBusy+WS4RobotBusy + WS5RobotBusy)/5,2)
+
 print('#####Workstation 1:######')
 AverageWaitingTime1 = sum(TimeWaitedInQueue_WS1)/(max(len(TimeWaitedInQueue_WS1),1))
 print('Average Waiting Time in Queue (s) :', round(AverageWaitingTime1,2))
@@ -626,12 +664,46 @@ def AverageDelayTimes(WS):
     return AverageMove1Time, AverageMove2Time, AverageMove3Time
 
 
-titles = ['Av. Waiting Time', 'Av. Throughput Rate', 'Av. To', 'Lo', 'Av. Pwc']
-pdWS1 = [round(AverageWaitingTime1,2),round(AverageThroughputRate1,2), round(AverageOrderCycleTime1,2),round(Lo1,2), round(UtilizationWS1,2)]
-pdWS2 = [round(AverageWaitingTime2,2),round(AverageThroughputRate2,2), round(AverageOrderCycleTime2,2),round(Lo2,2), round(UtilizationWS2,2)]
-pdWS3 = [round(AverageWaitingTime3,2),round(AverageThroughputRate3,2), round(AverageOrderCycleTime3,2),round(Lo3,2), round(UtilizationWS3,2)]
-pdWS4 = [round(AverageWaitingTime4,2),round(AverageThroughputRate4,2), round(AverageOrderCycleTime4,2),round(Lo4,2), round(UtilizationWS4,2)]
-pdWS5 = [round(AverageWaitingTime5,2),round(AverageThroughputRate5,2), round(AverageOrderCycleTime5,2),round(Lo5,2), round(UtilizationWS5,2)]
+
+if TableNumber == 2:
+    B= 206.1
+    C= 0.52
+    D= 0.13
+    E= 0.64
+elif TableNumber == 3:
+    B= 154.4
+    C= 0.03
+    D= 0.06
+    E= 0.29
+elif TableNumber == 4:
+    B= 173.3
+    C= 0.51
+    D= 0.53
+    E= 0.69
+elif TableNumber == 5:
+    B= 150.4
+    C= 0.00
+    D= 0.24
+    E= 0.30
+elif TableNumber == 6:
+    B= 412.7 
+    C= 12.63
+    D= 0.92
+    E= 0.91
+elif TableNumber == 7:
+    B= 156.6
+    C= 0
+    D= 0.42
+    E= 0.31
+Comparison = ['NA', 'NA', B, C, D, E]
+comparedtotitle = 'Sim. Results Table' + str(TableNumber)
+
+titles = ['Av. Waiting Time', 'Av. Throughput Rate', 'Av. To', 'Lo', 'Pwc', 'Pr']
+pdWS1 = [round(AverageWaitingTime1,2),round(AverageThroughputRate1,2), round(AverageOrderCycleTime1,2),round(Lo1,2), round(UtilizationWS1,2), round(WS1RobotBusy,2)]
+pdWS2 = [round(AverageWaitingTime2,2),round(AverageThroughputRate2,2), round(AverageOrderCycleTime2,2),round(Lo2,2), round(UtilizationWS2,2), round(WS2RobotBusy,2)]
+pdWS3 = [round(AverageWaitingTime3,2),round(AverageThroughputRate3,2), round(AverageOrderCycleTime3,2),round(Lo3,2), round(UtilizationWS3,2), round(WS3RobotBusy,2)]
+pdWS4 = [round(AverageWaitingTime4,2),round(AverageThroughputRate4,2), round(AverageOrderCycleTime4,2),round(Lo4,2), round(UtilizationWS4,2), round(WS4RobotBusy,2)]
+pdWS5 = [round(AverageWaitingTime5,2),round(AverageThroughputRate5,2), round(AverageOrderCycleTime5,2),round(Lo5,2), round(UtilizationWS5,2), round(WS5RobotBusy,2)]
 
 AverageWT = round((AverageWaitingTime1 + AverageWaitingTime2 + AverageWaitingTime3 + AverageWaitingTime4 + AverageWaitingTime5)/5,2)
 AverageTH = round((AverageThroughputRate1+AverageThroughputRate2+AverageThroughputRate3+AverageThroughputRate4+AverageThroughputRate5)/5,2)
@@ -639,10 +711,13 @@ AverageCT = round((AverageOrderCycleTime1+AverageOrderCycleTime2+AverageOrderCyc
 AverageLo = round((Lo1+Lo2+Lo3+Lo4+Lo5)/5,2)
 AveragePws = round((UtilizationWS1+UtilizationWS2+UtilizationWS3+UtilizationWS4+UtilizationWS5)/5,2)
 
-avWS = [AverageWT, AverageTH, AverageCT, AverageLo, AveragePws]
-A_Results = pd.DataFrame({'PM': titles, 'WS1': pdWS1, 'WS2': pdWS2, 'WS3': pdWS3, 'WS4': pdWS4,'WS5': pdWS5, 'Average': avWS})
+avWS = [AverageWT, AverageTH, AverageCT, AverageLo, AveragePws, round(avBusy,2)]
+A_Results = pd.DataFrame({'PM': titles, 'WS1': pdWS1, 'WS2': pdWS2, 'WS3': pdWS3, 'WS4': pdWS4,'WS5': pdWS5, 'Average': avWS,comparedtotitle:Comparison })
 
 A_Results = A_Results.set_index('PM')
+
+
+
 #Col1 = ['Av. Waiting Time', 'Av. Throughput Rate']
 
 #col2 = [5, 4]

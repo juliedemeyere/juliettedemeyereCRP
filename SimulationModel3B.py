@@ -625,6 +625,33 @@ def AverageDelayTimes(WS):
     AverageMove3Time = (sum(Move3list)/len(Move3list))/1.3
     return AverageMove1Time, AverageMove2Time, AverageMove3Time
 
+
+titles = ['Av. Waiting Time', 'Av. Throughput Rate', 'Av. To', 'Lo', 'Av. Pwc']
+pdWS1 = [round(AverageWaitingTime1,2),round(AverageThroughputRate1,2), round(AverageOrderCycleTime1,2),round(Lo1,2), round(UtilizationWS1,2)]
+pdWS2 = [round(AverageWaitingTime2,2),round(AverageThroughputRate2,2), round(AverageOrderCycleTime2,2),round(Lo2,2), round(UtilizationWS2,2)]
+pdWS3 = [round(AverageWaitingTime3,2),round(AverageThroughputRate3,2), round(AverageOrderCycleTime3,2),round(Lo3,2), round(UtilizationWS3,2)]
+pdWS4 = [round(AverageWaitingTime4,2),round(AverageThroughputRate4,2), round(AverageOrderCycleTime4,2),round(Lo4,2), round(UtilizationWS4,2)]
+pdWS5 = [round(AverageWaitingTime5,2),round(AverageThroughputRate5,2), round(AverageOrderCycleTime5,2),round(Lo5,2), round(UtilizationWS5,2)]
+
+AverageWT = round((AverageWaitingTime1 + AverageWaitingTime2 + AverageWaitingTime3 + AverageWaitingTime4 + AverageWaitingTime5)/5,2)
+AverageTH = round((AverageThroughputRate1+AverageThroughputRate2+AverageThroughputRate3+AverageThroughputRate4+AverageThroughputRate5)/5,2)
+AverageCT = round((AverageOrderCycleTime1+AverageOrderCycleTime2+AverageOrderCycleTime3+AverageOrderCycleTime4+AverageOrderCycleTime5)/5,2)
+AverageLo = round((Lo1+Lo2+Lo3+Lo4+Lo5)/5,2)
+AveragePws = round((UtilizationWS1+UtilizationWS2+UtilizationWS3+UtilizationWS4+UtilizationWS5)/5,2)
+
+avWS = [AverageWT, AverageTH, AverageCT, AverageLo, AveragePws]
+A_Results = pd.DataFrame({'PM': titles, 'WS1': pdWS1, 'WS2': pdWS2, 'WS3': pdWS3, 'WS4': pdWS4,'WS5': pdWS5, 'Average': avWS})
+
+A_Results = A_Results.set_index('PM')
+#Col1 = ['Av. Waiting Time', 'Av. Throughput Rate']
+
+#col2 = [5, 4]
+
+#Results[0] = Col1
+#Results[2] = col2
+
+#Results.set_index('Av. Waiting Time')
+
 #Times1= AverageDelayTimes(1)
 
 

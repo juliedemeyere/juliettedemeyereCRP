@@ -36,7 +36,7 @@ t = 0
 robots = ('Robot 1', 'Robot 2', 'Robot 3', 'Robot 4', 'Robot 5', 'Robot 6', 'Robot 7', 'Robot 8', 'Robot 9', 'Robot 10', 'Robot 11', 'Robot 12', 'Robot 13', 'Robot 14')
 
 
-TableNumber = 2 # write in the table from the paper you want to replicate
+TableNumber = 3 # write in the table from the paper you want to replicate
 
 if TableNumber == 2:
     F = 2
@@ -61,6 +61,7 @@ elif TableNumber == 7:
 #ArrivalRate = 31.68 # arrivalrate per hour
 
 LengthBufferQueue = [[],[],[],[],[]]
+Robot1Movements = [[[],[],[],[]],[[],[],[],[]],[[],[],[],[]],[[],[],[],[]],[[],[],[],[]],[[],[],[],[]]]
 
 WS1Delay = [[],[],[]]
 WS2Delay = [[],[],[]]
@@ -133,6 +134,8 @@ WS_Xlocation = {1:0, 2:17, 3:46, 4:74, 5:90}
 WS_Ylocation = {1:19, 2:0, 3:0, 4:0, 5:20}
 WS_direction = {1:'West',2:'South', 3:'South',4:'South', 5:'East'}
 
+Robot1Movements = [[],[],[],[],[],[]]
+
 
 
 def Move1ToStorageScheduleArrival(PodMatrix, WS,t):
@@ -154,6 +157,7 @@ def Move2Move3DelayTime(PodMatrix, WS,t, x2, y2):
     Move2 = DistanceCalculator_Move2(x2,y2, Move3[1], Move3[2])
     Times = CalculateTravelTime(Move2, Move3)
     Time = sum(Times)
+   # print(Times)
     ArrivalTime = Time + t
     return ArrivalTime, PodMatrix, Times[0], Times[1]
     
@@ -189,7 +193,23 @@ Workfloor.PodMatrixGenerator(probability) # generates a new podmatrix
 
 PodMatrix = Workfloor.Matrix
 
+Robot1TrackerA = [0,0]
+Robot1TrackerB = [0,0]
 
+Robot2TrackerA = [0,0]
+Robot2TrackerB = [0,0]
+
+A_Robot1Queue = []
+A_Robot1Service = []
+A_Robot1Move1 = []
+A_Robot1Storage = []
+A_Robot1Move23 = []
+
+A_Robot2Queue = []
+A_Robot2Service = []
+A_Robot2Move1 = []
+A_Robot2Storage = []
+A_Robot2Move23 = []
 
 WS1IncomingJobArrivalTime = 0
 WS2IncomingJobArrivalTime = 0
@@ -197,13 +217,10 @@ WS3IncomingJobArrivalTime = 0
 WS4IncomingJobArrivalTime = 0
 WS5IncomingJobArrivalTime = 0
 
-#def JobScheduler(ArrivalRate, t):
-#    seconds = 1/(ArrivalRate/60/60)
-#    NextArrival = random.expovariate(1/seconds)
-#    ArrivalTime = t + NextArrival
-#    print(NextArrival,'ArrivalTime:', ArrivalTime)
-#    return ArrivalTime
-    
+jobWS1 = 0
+jobWS1Tracker = []
+jobarrival1 = []
+
 AmountOfJobsArrived = 0    
 StartServiceNext_WS1 = 0 # Initialize the service start at WS
 StartServiceNext_WS2 = 0
@@ -211,7 +228,23 @@ StartServiceNext_WS3 = 0
 StartServiceNext_WS4 = 0
 StartServiceNext_WS5 = 0
 
+QueueWS1 = []
+QWS1 = 0
+QueueWS2 = []
+QueueWS3 = []
+QueueWS4 = []
+QueueWS5 = []
+
 while t < T:
+    if  t >= WS1IncomingJobArrivalTime:
+        WS_1Jobs.append(WS1IncomingJobArrivalTime)
+        AmountOfJobsArrived += 1
+        seconds = 1/(ArrivalRate/60/60)
+        NextArrival = random.expovariate(1/seconds)
+        ArrivalTime = t + NextArrival
+        WS1IncomingJobArrivalTime = ArrivalTime
+        jobarrival1.append(ArrivalTime)
+        
     if len(MovingMove1_WS1) > 0:
         for i in MovingMove1_WS1:
             ArrivalTime = i[1]
@@ -220,12 +253,25 @@ while t < T:
                 indexnumber = MovingMove1_WS1.index(i)
                 MovingMove1_WS1.remove(i)
                 RobotinStorage_WS1.append(AddingEvent)
+                if AddingEvent[0] == 'Robot 1':
+                    Robot1TrackerA.append(3)
+                    Robot1TrackerB.append(t)
+                    Difference = Robot1TrackerB[-1] - Robot1TrackerB[-2]
+                    A_Robot1Move1.append(Difference)
+                if AddingEvent[0] == 'Robot 2':
+                    Robot2TrackerA.append(3)
+                    Robot2TrackerB.append(t)
+                    Difference = Robot2TrackerB[-1] - Robot2TrackerB[-2]
+                    A_Robot2Move1.append(Difference)
+               
     if len(RobotinStorage_WS1) > 0:    
         if len(WS_1Jobs) > 0:
             earliest = min(WS_1Jobs)
             WS_1Jobs.remove(earliest)
             Robot = RobotinStorage_WS1[0]
             WS = Robot[2]
+            jobWS1Tracker.append([jobWS1, earliest, t, Robot[0], t-earliest])
+            jobWS1 += 1
             RobotinStorage_WS1.pop(0)
             Robot[3] = earliest
             Move23 = Move2Move3DelayTime(PodMatrix, WS,t, Robot[4], Robot[5])
@@ -234,13 +280,17 @@ while t < T:
             WS1Delay[2].append(Move23[3])
             Robot[1] = ArrivalAtWS
             MovingMove23_WS1.append(Robot)
-    if  t >= WS1IncomingJobArrivalTime:
-        WS_1Jobs.append(WS1IncomingJobArrivalTime)
-        AmountOfJobsArrived += 1
-        seconds = 1/(ArrivalRate/60/60)
-        NextArrival = random.expovariate(1/seconds)
-        ArrivalTime = t + NextArrival
-        WS1IncomingJobArrivalTime = ArrivalTime
+            if Robot[0] == 'Robot 1':
+                Robot1TrackerA.append(4)
+                Robot1TrackerB.append(t)
+                Difference = Robot1TrackerB[-1] - Robot1TrackerB[-2]
+                A_Robot1Storage.append(Difference)
+            if Robot[0] == 'Robot 2':
+                Robot2TrackerA.append(4)
+                Robot2TrackerB.append(t)
+                Difference = Robot2TrackerB[-1] - Robot2TrackerB[-2]
+                A_Robot2Storage.append(Difference)
+
     if len(MovingMove23_WS1) > 0:
         for i in MovingMove23_WS1:
             ArrivalTime = i[1]
@@ -248,6 +298,17 @@ while t < T:
                 AddingEvent = i
                 MovingMove23_WS1.remove(i)
                 Robots_WS1.append(AddingEvent)
+                if AddingEvent[0] == 'Robot 1':
+                    Robot1TrackerA.append(0)
+                    Robot1TrackerB.append(t)
+                    Difference = Robot1TrackerB[-1] - Robot1TrackerB[-2]
+                    A_Robot1Move23.append(Difference)
+                if AddingEvent[0] == 'Robot 2':
+                    Robot2TrackerA.append(0)
+                    Robot2TrackerB.append(t)
+                    Difference = Robot2TrackerB[-1] - Robot2TrackerB[-2]
+                    A_Robot2Move23.append(Difference)
+
     if len(Robots_WS1) > 0:
         if t >= StartServiceNext_WS1: # starts the service of a new job at WS
             CurrentEvent = Robots_WS1[0]
@@ -262,7 +323,7 @@ while t < T:
             AmountofJobsFinished_WS1.append(1)
             WS1picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,t)
+            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS1)
             WS1Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -274,6 +335,24 @@ while t < T:
             WS1JobCycle.append(OrderCycle)
             CurrentEvent[3] = 0
             MovingMove1_WS1.append(CurrentEvent)
+            if CurrentEvent[0] == 'Robot 1':
+                Robot1TrackerA.append(1)
+                Robot1TrackerB.append(t)
+                Difference = Robot1TrackerB[-1] - Robot1TrackerB[-2]
+                A_Robot1Queue.append(Difference)
+                Robot1TrackerA.append(2)
+                Robot1TrackerB.append(StartServiceNext_WS1)
+                Difference = Robot1TrackerB[-1] - Robot1TrackerB[-2]
+                A_Robot1Service.append(Difference)
+            if CurrentEvent[0] == 'Robot 2':
+                Robot2TrackerA.append(1)
+                Robot2TrackerB.append(t)
+                Difference = Robot2TrackerB[-1] - Robot2TrackerB[-2]
+                A_Robot2Queue.append(Difference)
+                Robot2TrackerA.append(2)
+                Robot2TrackerB.append(StartServiceNext_WS1)
+                Difference = Robot2TrackerB[-1] - Robot2TrackerB[-2]
+                A_Robot2Service.append(Difference)
             
     #### NUMBER 2 #########       
     if len(MovingMove1_WS2) > 0:
@@ -328,7 +407,7 @@ while t < T:
             AmountofJobsFinished_WS2.append(1)
             WS2picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,t)
+            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS2)
             WS2Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -393,7 +472,7 @@ while t < T:
             AmountofJobsFinished_WS3.append(1)
             WS3picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,t)
+            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS3)
             WS3Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -456,7 +535,7 @@ while t < T:
             AmountofJobsFinished_WS4.append(1)
             WS4picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,t)
+            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS4)
             WS4Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -519,7 +598,7 @@ while t < T:
             AmountofJobsFinished_WS5.append(1)
             WS5picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,t)
+            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS5)
             WS5Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -537,6 +616,11 @@ while t < T:
     LengthBufferQueue[2].append(len(WS_3Jobs))
     LengthBufferQueue[3].append(len(WS_4Jobs))
     LengthBufferQueue[4].append(len(WS_5Jobs))
+    QueueWS1.append(len(Robots_WS1))
+    QueueWS2.append(len(Robots_WS2))
+    QueueWS3.append(len(Robots_WS3))
+    QueueWS4.append(len(Robots_WS4))
+    QueueWS5.append(len(Robots_WS5))
     t = t+1
 
 # In order to eliminate the warm up effect
@@ -712,12 +796,88 @@ AverageLo = round((Lo1+Lo2+Lo3+Lo4+Lo5)/5,2)
 AveragePws = round((UtilizationWS1+UtilizationWS2+UtilizationWS3+UtilizationWS4+UtilizationWS5)/5,2)
 
 avWS = [AverageWT, AverageTH, AverageCT, AverageLo, AveragePws, round(avBusy,2)]
-A_Results = pd.DataFrame({'PM': titles, 'WS1': pdWS1, 'WS2': pdWS2, 'WS3': pdWS3, 'WS4': pdWS4,'WS5': pdWS5, 'Average': avWS,comparedtotitle:Comparison })
+
+
+
+A_Robot1MovementsResults = pd.DataFrame({'Time': Robot1TrackerB, 'Movements': Robot1TrackerA})
+A_Robot1MovementsResults = A_Robot1MovementsResults.set_index('Time')
+
+A_Robot2MovementsResults = pd.DataFrame({'Time': Robot2TrackerB, 'Movements': Robot2TrackerA})
+A_Robot2MovementsResults = A_Robot2MovementsResults.set_index('Time')
+
+if len(A_Robot1Queue) < len(A_Robot1Service):
+    A_Robot1Queue.append(0)
+elif len(A_Robot1Queue) > len(A_Robot1Service):
+    A_Robot1Service.append(0)
+
+if len(A_Robot1Move1) < len(A_Robot1Queue):
+    A_Robot1Move1.append(0)
+    
+if len(A_Robot1Storage) < len(A_Robot1Queue):
+    A_Robot1Storage.append(0)
+    
+if len(A_Robot1Move23) < len(A_Robot1Queue):
+    A_Robot1Move23.append(0)
+
+
+Cycle = []
+for i in range(0,len(A_Robot1Queue)):
+    CyclePlus = A_Robot1Queue[i] + A_Robot1Service[i] + A_Robot1Move1[i] + A_Robot1Move23[i]
+    Cycle.append(CyclePlus)
+    
+
+A_Robot1Moves = pd.DataFrame({'Queueing':A_Robot1Queue, 'Service':A_Robot1Service,'Move1':A_Robot1Move1, 'Storage':A_Robot1Storage, 'Move23': A_Robot1Move23, 'CycleTimeFull':Cycle})
+
+print('')
+#print('For WS1:')
+
+
+avQueue = round(sum(A_Robot1Queue)/len(A_Robot1Queue),2)
+#print('Average Queue:', avQueue)
+avService = round(sum(A_Robot1Service)/len(A_Robot1Service),2)
+#print('Average Service:',avService )
+avMove1 = round(sum(A_Robot1Move1)/len(A_Robot1Move1),2)
+#print('Average Move1:', avMove1 )
+avStorage = round(sum(A_Robot1Storage)/len(A_Robot1Storage),2)
+#print('Average Storage:',avStorage  )
+avMove23 = round(sum(A_Robot1Move23)/len(A_Robot1Move23),2)
+#print('Average Move2 + Move3:',avMove23 )
+acCycle = round(sum(Cycle)/len(Cycle),2)
+#print('Average Cycle Time (all moves except storage):', acCycle)
+
+
+Move1AvDelay = round((sum(WS1Delay[0])/len(WS1Delay[0]) + sum(WS2Delay[0])/len(WS2Delay[0]) + sum(WS3Delay[0])/len(WS3Delay[0]) + sum(WS4Delay[0])/len(WS4Delay[0]) + sum(WS5Delay[0])/len(WS5Delay[0]))/5,2)
+
+A_Results = pd.DataFrame({'PM': titles, 'WS1': pdWS1, 'WS2': pdWS2, 'WS3': pdWS3, 'WS4': pdWS4,'WS5': pdWS5, 'Av. Move1 Delay':Move1AvDelay ,'Average': avWS,comparedtotitle:Comparison })
 
 A_Results = A_Results.set_index('PM')
 
+print('Average Queue Lengths:')
+avQ1 = round(sum(QueueWS1)/len(QueueWS1),4)
+avQ2 = round(sum(QueueWS2)/len(QueueWS2),4)
+avQ3 = round(sum(QueueWS3)/len(QueueWS3),4)
+avQ4 = round(sum(QueueWS4)/len(QueueWS4),4)
+avQ5 = round(sum(QueueWS5)/len(QueueWS5),4)
+print('WS1:',avQ1)
+print('WS2:', avQ2)
+print('WS3:', avQ3)
+print( 'WS4:', avQ4)
+print('WS5:', avQ5)
+print('sum:',avQ1+avQ2+avQ3+avQ4+avQ5 )
+arrival = ArrivalRate/60/60
+theoreticalTo = (AverageLo + avQ1+avQ2+avQ3+avQ4+avQ5 )/(arrival)
+print(theoreticalTo)
 
 
+
+jobz = 0
+qjob = 0
+for i in range(len(jobWS1Tracker)):
+    jobz += jobWS1Tracker[i][4]
+    qjob += 1
+#avJob = sum(jobWS1Tracker[4])/len(sum(jobWS1Tracker[4]))
+#print(avJob)
+avz = jobz/qjob
 #Col1 = ['Av. Waiting Time', 'Av. Throughput Rate']
 
 #col2 = [5, 4]
@@ -737,9 +897,9 @@ A_Results = A_Results.set_index('PM')
 
 #print('Workstation Utlizations:',
 #      'WS1:',round(UtilizationWS1,2))
-#plt.plot(TimesStartedService,TimeWaitedInQueue)
+#plt.plot(Robot1TrackerB,Robot1TrackerA)
 #plt.xlabel('Time')
-#plt.ylabel('Time Waited in Queue')
+#plt.ylabel('Position')
 
 #plt.plot(TimesStartedService,OrderCycleTime)
 #plt.xlabel('Time')

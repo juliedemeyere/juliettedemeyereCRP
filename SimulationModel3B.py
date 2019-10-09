@@ -27,7 +27,7 @@ T = 60*60*N # amount of time that the simulation is kept running, in seconds
 
 t = 0
 
-TableNumber = 2 # write in the table from the paper you want to replicate
+TableNumber = 3 # write in the table from the paper you want to replicate
 if TableNumber == 2:
     F = 2
     ArrivalRate = 31.68
@@ -204,13 +204,6 @@ while t < T:
 
     t = t+1
 
-
-
-
-
-
-
-
 "The lists and values below are created in order to record the performance measurements"
 UtilizationWS = {1:sum(PickingTimes[1])/T,2:sum(PickingTimes[2])/T,3:sum(PickingTimes[3])/T,4:sum(PickingTimes[4])/T,5:sum(PickingTimes[5])/T}
 
@@ -309,5 +302,5 @@ Utilization.append(Comparison[4])
 Pr = [WS1RobotBusy, WS2RobotBusy, WS3RobotBusy, WS4RobotBusy, WS5RobotBusy, avBusy,Comparison[5]]
 A_PerformanceMeasurements = pd.DataFrame({'Workstations':Workstations, 'WaitingTime WS Queue': AverageWaitingTimes, 'Throughput (/h)':AverageThroughPutRate,
                            'Cycle Time (s)':AverageOrderCycleTime, 'Lo':AverageExternalOrder, 'Pwc':Utilization, 'Pr':Pr})
-
+A_PerformanceMeasurements = A_PerformanceMeasurements.set_index('Workstations')
 print('See results under "A_PerformanceMeasurements"')

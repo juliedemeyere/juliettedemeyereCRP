@@ -26,7 +26,7 @@ WS4JobCycle = []
 WS5JobCycle = []
 
 
-N = 168 # amount of hours. Needs to be greater than 1 for warm up effect
+N =  169# amount of hours. Needs to be greater than 1 for warm up effect
 T = 60*60*N # amount of time that the simulation is kept running, in seconds
 
 t = 0
@@ -36,7 +36,7 @@ t = 0
 robots = ('Robot 1', 'Robot 2', 'Robot 3', 'Robot 4', 'Robot 5', 'Robot 6', 'Robot 7', 'Robot 8', 'Robot 9', 'Robot 10', 'Robot 11', 'Robot 12', 'Robot 13', 'Robot 14')
 
 
-TableNumber = 3 # write in the table from the paper you want to replicate
+TableNumber = 2 # write in the table from the paper you want to replicate
 
 if TableNumber == 2:
     F = 2
@@ -125,10 +125,10 @@ WS3picking = []
 WS4picking = []
 WS5picking = []
 
-Xlength = 90
-Ylength = 37
-crossaisles = [0, 6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84, 90] # relevant for x intersections
-aisles = [0, 2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35, 37] # relevant for y intersections
+Xlength = 89
+Ylength = 36
+crossaisles = [6, 12, 18, 24, 30, 36, 42, 48, 54, 60, 66, 72, 78, 84] # relevant for x intersections
+aisles = [2, 5, 8, 11, 14, 17, 20, 23, 26, 29, 32, 35] # relevant for y intersections
 
 WS_Xlocation = {1:0, 2:17, 3:46, 4:74, 5:90}
 WS_Ylocation = {1:19, 2:0, 3:0, 4:0, 5:20}
@@ -138,7 +138,8 @@ Robot1Movements = [[],[],[],[],[],[]]
 
 
 
-def Move1ToStorageScheduleArrival(PodMatrix, WS,t):
+def Move1ToStorageScheduleArrival(WS,t):
+    PodMatrix = Workfloor.Matrix
     x = WS_Xlocation[WS]
     y = WS_Ylocation[WS]
     location = WS_direction[WS]
@@ -146,9 +147,10 @@ def Move1ToStorageScheduleArrival(PodMatrix, WS,t):
     Workfloor.MakeOne(Move1[1],Move1[2])
     TravelTime = Move1[0]/1.3
     ArrivalTime = TravelTime + t
-    return ArrivalTime, Move1[1], Move1[2], PodMatrix, TravelTime
+    return ArrivalTime, Move1[1], Move1[2], 'nothing', TravelTime
 
-def Move2Move3DelayTime(PodMatrix, WS,t, x2, y2):
+def Move2Move3DelayTime(WS,t, x2, y2):
+    PodMatrix = Workfloor.Matrix
     x = WS_Xlocation[WS]
     y = WS_Ylocation[WS]
     location = WS_direction[WS]
@@ -157,9 +159,8 @@ def Move2Move3DelayTime(PodMatrix, WS,t, x2, y2):
     Move2 = DistanceCalculator_Move2(x2,y2, Move3[1], Move3[2])
     Times = CalculateTravelTime(Move2, Move3)
     Time = sum(Times)
-   # print(Times)
     ArrivalTime = Time + t
-    return ArrivalTime, PodMatrix, Times[0], Times[1]
+    return ArrivalTime, 'nothing', Times[0], Times[1]
     
 MovingMove1_WS1 = []
 RobotinStorage_WS1 = []
@@ -236,7 +237,7 @@ QueueWS4 = []
 QueueWS5 = []
 
 while t < T:
-    if  t >= WS1IncomingJobArrivalTime:
+    if  t >= WS1IncomingJobArrivalTime: # jobscheduler
         WS_1Jobs.append(WS1IncomingJobArrivalTime)
         AmountOfJobsArrived += 1
         seconds = 1/(ArrivalRate/60/60)
@@ -274,7 +275,7 @@ while t < T:
             jobWS1 += 1
             RobotinStorage_WS1.pop(0)
             Robot[3] = earliest
-            Move23 = Move2Move3DelayTime(PodMatrix, WS,t, Robot[4], Robot[5])
+            Move23 = Move2Move3DelayTime(WS,t, Robot[4], Robot[5])
             ArrivalAtWS = Move23[0]
             WS1Delay[1].append(Move23[2])
             WS1Delay[2].append(Move23[3])
@@ -323,7 +324,7 @@ while t < T:
             AmountofJobsFinished_WS1.append(1)
             WS1picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS1)
+            Move1= Move1ToStorageScheduleArrival(WS,StartServiceNext_WS1)
             WS1Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -371,10 +372,11 @@ while t < T:
             WS = Robot[2]
             RobotinStorage_WS2.pop(0)
             Robot[3] = earliest
-            Move23 = Move2Move3DelayTime(PodMatrix, WS,t, Robot[4], Robot[5])
+            Move23 = Move2Move3DelayTime(WS,t, Robot[4], Robot[5])
             ArrivalAtWS = Move23[0]
             WS2Delay[1].append(Move23[2])
             WS2Delay[2].append(Move23[3])
+          #  PodMatrix = Move23[1]
             Robot[1] = ArrivalAtWS
             #print(round(ArrivalAtWS - t,2))
             MovingMove23_WS2.append(Robot)
@@ -407,7 +409,8 @@ while t < T:
             AmountofJobsFinished_WS2.append(1)
             WS2picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS2)
+            Move1= Move1ToStorageScheduleArrival(WS,StartServiceNext_WS2)
+         #   PodMatrix = Move1[3]
             WS2Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -438,10 +441,11 @@ while t < T:
             WS = Robot[2]
             RobotinStorage_WS3.pop(0)
             Robot[3] = earliest
-            Move23 = Move2Move3DelayTime(PodMatrix, WS,t, Robot[4], Robot[5])
+            Move23 = Move2Move3DelayTime(WS,t, Robot[4], Robot[5])
             ArrivalAtWS = Move23[0]
             WS3Delay[1].append(Move23[2])
             WS3Delay[2].append(Move23[3])
+           # PodMatrix = Move23[1]
             Robot[1] = ArrivalAtWS
             MovingMove23_WS3.append(Robot)
     if  t >= WS3IncomingJobArrivalTime:
@@ -472,7 +476,8 @@ while t < T:
             AmountofJobsFinished_WS3.append(1)
             WS3picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS3)
+            Move1= Move1ToStorageScheduleArrival(WS,StartServiceNext_WS3)
+           # PodMatrix = Move1[3]
             WS3Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -501,10 +506,11 @@ while t < T:
             WS = Robot[2]
             RobotinStorage_WS4.pop(0)
             Robot[3] = earliest
-            Move23 = Move2Move3DelayTime(PodMatrix, WS,t, Robot[4], Robot[5])
+            Move23 = Move2Move3DelayTime(WS,t, Robot[4], Robot[5])
             ArrivalAtWS = Move23[0]
             WS4Delay[1].append(Move23[2])
             WS4Delay[2].append(Move23[3])
+        #    PodMatrix = Move23[1]
             Robot[1] = ArrivalAtWS
             MovingMove23_WS4.append(Robot)
     if  t >= WS4IncomingJobArrivalTime:
@@ -535,7 +541,8 @@ while t < T:
             AmountofJobsFinished_WS4.append(1)
             WS4picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS4)
+            Move1= Move1ToStorageScheduleArrival( WS,StartServiceNext_WS4)
+       #     PodMatrix = Move1[3]
             WS4Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -564,10 +571,11 @@ while t < T:
             WS = Robot[2]
             RobotinStorage_WS5.pop(0)
             Robot[3] = earliest
-            Move23 = Move2Move3DelayTime(PodMatrix, WS,t, Robot[4], Robot[5])
+            Move23 = Move2Move3DelayTime(WS,t, Robot[4], Robot[5])
             ArrivalAtWS = Move23[0]
             WS5Delay[1].append(Move23[2])
             WS5Delay[2].append(Move23[3])
+          #  PodMatrix = Move23[1]
             Robot[1] = ArrivalAtWS
             MovingMove23_WS5.append(Robot)
     if  t >= WS5IncomingJobArrivalTime:
@@ -598,7 +606,8 @@ while t < T:
             AmountofJobsFinished_WS5.append(1)
             WS5picking.append(PickingTime)
             
-            Move1= Move1ToStorageScheduleArrival(PodMatrix, WS,StartServiceNext_WS5)
+            Move1= Move1ToStorageScheduleArrival(WS,StartServiceNext_WS5)
+          #  PodMatrix = Move1[3]
             WS5Delay[0].append(Move1[4])
             CurrentEvent[4] = Move1[1]
             CurrentEvent[5] = Move1[2]
@@ -852,21 +861,21 @@ A_Results = pd.DataFrame({'PM': titles, 'WS1': pdWS1, 'WS2': pdWS2, 'WS3': pdWS3
 
 A_Results = A_Results.set_index('PM')
 
-print('Average Queue Lengths:')
+#print('Average Queue Lengths:')
 avQ1 = round(sum(QueueWS1)/len(QueueWS1),4)
 avQ2 = round(sum(QueueWS2)/len(QueueWS2),4)
 avQ3 = round(sum(QueueWS3)/len(QueueWS3),4)
 avQ4 = round(sum(QueueWS4)/len(QueueWS4),4)
 avQ5 = round(sum(QueueWS5)/len(QueueWS5),4)
-print('WS1:',avQ1)
-print('WS2:', avQ2)
-print('WS3:', avQ3)
-print( 'WS4:', avQ4)
-print('WS5:', avQ5)
-print('sum:',avQ1+avQ2+avQ3+avQ4+avQ5 )
+#print('WS1:',avQ1)
+#print('WS2:', avQ2)
+#print('WS3:', avQ3)
+#print( 'WS4:', avQ4)
+#print('WS5:', avQ5)
+#print('sum:',avQ1+avQ2+avQ3+avQ4+avQ5 )
 arrival = ArrivalRate/60/60
 theoreticalTo = (AverageLo + avQ1+avQ2+avQ3+avQ4+avQ5 )/(arrival)
-print(theoreticalTo)
+#print(theoreticalTo)
 
 
 

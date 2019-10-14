@@ -10,6 +10,7 @@ from Model3 import CalculateTravelTime
 from Model3 import DistanceCalculator_Move3
 from Model3 import DistanceCalculator_Move1
 from Model3 import DistanceCalculator_Move2
+from function import cox
 from MatrixFile import PodMatrixClass
 from collections import deque # Use deque because it is really fast
 import random
@@ -25,9 +26,12 @@ import numpy as np
 N =  169# amount of hours. Needs to be greater than 1 for warm up effect
 T = 60*60*N # amount of time that the simulation is kept running, in seconds
 
+
+closedloop = 1 # if the simulation should simulate a closed loop then put 1
+
 t = 0
 
-TableNumber = 2 # write in the table from the paper you want to replicate
+TableNumber = 7 # write in the table from the paper you want to replicate
 if TableNumber == 2:
     F = 2
     ArrivalRate = 31.68
@@ -46,6 +50,7 @@ elif TableNumber == 6:
 elif TableNumber == 7:
     F = 14
     ArrivalRate = 100.80
+
 
 Xlength = 89
 Ylength = 36
@@ -73,7 +78,7 @@ def Move1ToStorageScheduleArrival(WS,t):
     location = WS_direction[WS]
     Move1 = DistanceCalculator_Move1(x,y, location, PodMatrix)
     Workfloor.MakeOne(Move1[1],Move1[2])
-    TravelTime = Move1[0]/1.3
+    TravelTime = (Move1[0]+1)/1.3
     ArrivalTime = TravelTime + t
     return ArrivalTime, Move1[1], Move1[2], 'nothing', TravelTime
 
@@ -127,14 +132,14 @@ LengthBufferQueue = {1:[],2:[],3:[],4:[],5:[]}
 while t < T:
     for WS in range(1,6):
         "Schedules the arrival of new jobs at the synchronization station"
-        if  t >= IncomingJobArrivalTime[WS]: # jobscheduler
-            Jobs_at_SyncStation[WS].append(IncomingJobArrivalTime[WS])
-            AmountOfJobsArrived += 1
-            seconds = 1/(ArrivalRate/60/60)
-            NextArrivalJob = random.expovariate(1/seconds)
-            ArrivalTime_NewJob = t + NextArrivalJob
-            IncomingJobArrivalTime[WS] = ArrivalTime_NewJob
-     #       jobarrival1.append(ArrivalTime)
+        if closedloop == 0:
+            if  t >= IncomingJobArrivalTime[WS]: # jobscheduler
+                Jobs_at_SyncStation[WS].append(IncomingJobArrivalTime[WS])
+                AmountOfJobsArrived += 1
+                seconds = 1/(ArrivalRate/60/60)
+                NextArrivalJob = np.random.exponential(seconds)
+                ArrivalTime_NewJob = t + NextArrivalJob
+                IncomingJobArrivalTime[WS] = ArrivalTime_NewJob
         "Stores the Robot into the arrival location when it has reached its arrival time"
         if len(MovingMove1[WS]) > 0:
             for i in MovingMove1[WS]:
@@ -147,9 +152,13 @@ while t < T:
         
         "Assigns a job to a robot if there is a robot at the storage location as well as a job at the SyncStation"          
         if len(RobotinStorage[WS]) > 0:    
-            if len(Jobs_at_SyncStation[WS]) > 0:
-                earliest = min(Jobs_at_SyncStation[WS])
-                Jobs_at_SyncStation[WS].remove(earliest)
+            if len(Jobs_at_SyncStation[WS]) > 0 or closedloop == 1:
+                if closedloop == 0:
+                    earliest = min(Jobs_at_SyncStation[WS])
+                    Jobs_at_SyncStation[WS].remove(earliest)
+                else:
+                    earliest = t
+                #Jobs_at_SyncStation[WS].remove(earliest)
                 Robot_StartsMove23 = RobotinStorage[WS][0]
                 WS = Robot_StartsMove23[2]
                 RobotinStorage[WS].pop(0)
@@ -179,7 +188,9 @@ while t < T:
                 TimeWaitedInQueue[WS].append(QueueWaitingTime)
                 TimesStartedService[WS].append(t)
                 Robots_at_WS[WS].pop(0)
-                PickingTime = random.expovariate(1/15)
+                #PickingTime = random.expovariate(1/15)
+                PickingTime = cox()
+                
                 StartServiceNextJobAtWS[WS] = t + PickingTime
                 TimeJobFinished[WS].append(StartServiceNextJobAtWS[WS])
                 AmountofJobsFinished[WS].append(1)
@@ -253,37 +264,43 @@ for i in range(1,6):
     Ut = sum(PickingTimes[i])/T
     Utilization.append(Ut)
 
-
+TotalThroughPut = sum(AverageThroughPutRate)
 if TableNumber == 2:
     B= 206.1
     C= 0.52
     D= 0.13
     E= 0.64
+    PaperTotalThroughPut = 245.1
 elif TableNumber == 3:
     B= 154.4
     C= 0.03
     D= 0.06
     E= 0.29
+    PaperTotalThroughPut = 245.1
 elif TableNumber == 4:
     B= 173.3
     C= 0.51
     D= 0.53
     E= 0.69
+    PaperTotalThroughPut = 871.6
 elif TableNumber == 5:
     B= 150.4
     C= 0.00
     D= 0.24
     E= 0.30
+    PaperTotalThroughPut = 871.6
 elif TableNumber == 6:
     B= 412.7 
     C= 12.63
     D= 0.92
     E= 0.91
+    PaperTotalThroughPut = 1165.2
 elif TableNumber == 7:
     B= 156.6
     C= 0
     D= 0.42
     E= 0.31
+    PaperTotalThroughPut = 1165.2
 Comparison = ['NA', 'NA', B, C, D, E]
 comparedtotitle = 'Sim. Results Table' + str(TableNumber)
 
@@ -310,4 +327,10 @@ Pr = [WS1RobotBusy, WS2RobotBusy, WS3RobotBusy, WS4RobotBusy, WS5RobotBusy, avBu
 A_PerformanceMeasurements = pd.DataFrame({'Workstations':Workstations, 'WaitingTime WS Queue': AverageWaitingTimes, 'Throughput (/h)':AverageThroughPutRate,
                            'Cycle Time (s)':AverageOrderCycleTime, 'Lo':AverageExternalOrder, 'Pwc':Utilization, 'Pr':Pr})
 
-print('See results under "A_PerformanceMeasurements"')
+print('See results under "A_PerformanceMeasurements". These are the simulation results compared to the results of the simulation presented in the paper.')
+if closedloop == 1:
+    print('')
+    print('Note that this is closed loop simulation - therefore cycle time is from start move 2 until finishing the job. The "arrival rate" is also irrelevant as there is an unlimited amount of jobs.')
+    print('')
+    print('Total Throughput:', round(TotalThroughPut,2))
+    print('Paper Total Throughput:',PaperTotalThroughPut)

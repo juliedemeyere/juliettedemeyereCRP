@@ -26,9 +26,9 @@ import numpy as np
 N =  169# amount of hours. Needs to be greater than 1 for warm up effect
 T = 60*60*N # amount of time that the simulation is kept running, in seconds
 
-
-closedloop = 1 # if the simulation should simulate a closed loop then put 1
-
+"Closedloop and general delay below can be switched on and off to simulate different aspects, as described below"
+closedloop = 0 # if the simulation should simulate a closed loop then put 1
+generaldelay = 1 # this switch can be turned on if using the average delay times instead of the simulation of the movement of the pod locations
 t = 0
 
 TableNumber = 7 # write in the table from the paper you want to replicate
@@ -71,28 +71,38 @@ Workfloor.PodMatrixGenerator(probability) # generates a new podmatrix
 PodMatrix = Workfloor.Matrix
 
 
-def Move1ToStorageScheduleArrival(WS,t):
-    PodMatrix = Workfloor.Matrix
-    x = WS_Xlocation[WS]
-    y = WS_Ylocation[WS]
-    location = WS_direction[WS]
-    Move1 = DistanceCalculator_Move1(x,y, location, PodMatrix)
-    Workfloor.MakeOne(Move1[1],Move1[2])
-    TravelTime = (Move1[0]+1)/1.3
-    ArrivalTime = TravelTime + t
+def Move1ToStorageScheduleArrival(WS,t, generaldelay):
+    if generaldelay == 0:
+        PodMatrix = Workfloor.Matrix
+        x = WS_Xlocation[WS]
+        y = WS_Ylocation[WS]
+        location = WS_direction[WS]
+        Move1 = DistanceCalculator_Move1(x,y, location, PodMatrix)
+        Workfloor.MakeOne(Move1[1],Move1[2])
+        TravelTime = (Move1[0]+1)/1.3
+        ArrivalTime = TravelTime + t
+    else:
+        TravelTime = np.random.exponential(44.1)
+        ArrivalTime = TravelTime + t
+        Move1 = [0,0,0]
     return ArrivalTime, Move1[1], Move1[2], 'nothing', TravelTime
 
-def Move2Move3DelayTime(WS,t, x2, y2):
-    PodMatrix = Workfloor.Matrix
-    x = WS_Xlocation[WS]
-    y = WS_Ylocation[WS]
-    location = WS_direction[WS]
-    Move3 = DistanceCalculator_Move3(x,y, location, PodMatrix)
-    Workfloor.MakeZero(Move3[1],Move3[2])
-    Move2 = DistanceCalculator_Move2(x2,y2, Move3[1], Move3[2])
-    Times = CalculateTravelTime(Move2, Move3)
-    Time = sum(Times)
-    ArrivalTime = Time + t
+def Move2Move3DelayTime(WS,t, x2, y2, generaldelay):
+    if generaldelay == 0:
+        PodMatrix = Workfloor.Matrix
+        x = WS_Xlocation[WS]
+        y = WS_Ylocation[WS]
+        location = WS_direction[WS]
+        Move3 = DistanceCalculator_Move3(x,y, location, PodMatrix)
+        Workfloor.MakeZero(Move3[1],Move3[2])
+        Move2 = DistanceCalculator_Move2(x2,y2, Move3[1], Move3[2])
+        Times = CalculateTravelTime(Move2, Move3)
+        Time = sum(Times)
+        ArrivalTime = Time + t
+    else:
+        TravelTime = np.random.exponential(33.13) + np.random.exponential(45.2)
+        ArrivalTime = TravelTime + t
+        Times = [33.13,45.2]
     return ArrivalTime, 'nothing', Times[0], Times[1]
 
 "Initialize the first robots, all located at the WorkStation"
@@ -163,7 +173,7 @@ while t < T:
                 WS = Robot_StartsMove23[2]
                 RobotinStorage[WS].pop(0)
                 Robot_StartsMove23[3] = earliest
-                Move23 = Move2Move3DelayTime(WS,t, Robot_StartsMove23[4], Robot_StartsMove23[5])
+                Move23 = Move2Move3DelayTime(WS,t, Robot_StartsMove23[4], Robot_StartsMove23[5], generaldelay)
                 ArrivalAtWS = Move23[0]
                 WSDelay[WS][1].append(Move23[2])
                 WSDelay[WS][2].append(Move23[3])
@@ -196,7 +206,7 @@ while t < T:
                 AmountofJobsFinished[WS].append(1)
                 PickingTimes[WS].append(PickingTime)
                 
-                Move1= Move1ToStorageScheduleArrival(WS,StartServiceNextJobAtWS[WS])
+                Move1= Move1ToStorageScheduleArrival(WS,StartServiceNextJobAtWS[WS], generaldelay)
                 WSDelay[WS][0].append(Move1[4])
                 Robot_ServiceAtWS[4] = Move1[1]
                 Robot_ServiceAtWS[5] = Move1[2]
@@ -326,6 +336,13 @@ Utilization.append(Comparison[4])
 Pr = [WS1RobotBusy, WS2RobotBusy, WS3RobotBusy, WS4RobotBusy, WS5RobotBusy, avBusy,Comparison[5]]
 A_PerformanceMeasurements = pd.DataFrame({'Workstations':Workstations, 'WaitingTime WS Queue': AverageWaitingTimes, 'Throughput (/h)':AverageThroughPutRate,
                            'Cycle Time (s)':AverageOrderCycleTime, 'Lo':AverageExternalOrder, 'Pwc':Utilization, 'Pr':Pr})
+
+AvDelayMove1 = (sum(WSDelay[1][0]) + sum(WSDelay[2][0]) + sum(WSDelay[3][0]) + sum(WSDelay[4][0]) + sum(WSDelay[5][0]))/(len(WSDelay[1][0]) + len(WSDelay[2][0]) +len(WSDelay[3][0]) + len(WSDelay[4][0]) + len(WSDelay[5][0]))
+#print(AvDelayMove1)
+AvDelayMove2 = (sum(WSDelay[1][1]) + sum(WSDelay[2][1]) + sum(WSDelay[3][1]) + sum(WSDelay[4][1]) + sum(WSDelay[5][1]))/(len(WSDelay[1][1]) + len(WSDelay[2][1]) +len(WSDelay[3][1]) + len(WSDelay[4][1]) + len(WSDelay[5][1]))
+#print(AvDelayMove2)
+AvDelayMove3 = (sum(WSDelay[1][2]) + sum(WSDelay[2][2]) + sum(WSDelay[3][2]) + sum(WSDelay[4][2]) + sum(WSDelay[5][2]))/(len(WSDelay[1][2]) + len(WSDelay[2][2]) +len(WSDelay[3][2]) + len(WSDelay[4][2]) + len(WSDelay[5][2]))
+#print(AvDelayMove3)
 
 print('See results under "A_PerformanceMeasurements". These are the simulation results compared to the results of the simulation presented in the paper.')
 if closedloop == 1:

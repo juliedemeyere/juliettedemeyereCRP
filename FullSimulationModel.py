@@ -11,6 +11,7 @@ from Model3 import DistanceCalculator_Move3
 from Model3 import DistanceCalculator_Move1
 from Model3 import DistanceCalculator_Move2
 from function import cox
+from function import coxMean
 from MatrixFile import PodMatrixClass
 from collections import deque # Use deque because it is really fast
 import random
@@ -26,7 +27,7 @@ from scipy import mean
 "and by altering which table number from the Paper should be mimicked "
 "(in terms of number of robots and arrival rate)"
 def RunSimulation(TableNumber, nrRuns, k, b1):
-    N =  10# amount of hours. Needs to be greater than 1 for warm up effect
+    N =  1# amount of hours. Needs to be greater than 1 for warm up effect
     T = 60*60*N # amount of time that the simulation is kept running, in seconds
     "Closedloop and general delay below can be switched on and off to simulate different aspects, as described below"
     closedloop = 1 # if the simulation should simulate a closed loop then put 1
@@ -201,7 +202,8 @@ def RunSimulation(TableNumber, nrRuns, k, b1):
                     TimesStartedService[WS].append(t)
                     Robots_at_WS[WS].pop(0)
                     #PickingTime = random.expovariate(1/15)
-                    PickingTime = cox(b1,k,mu)
+                    #PickingTime = cox(b1,k,mu)
+                    PickingTime = coxMean(b1,k,15)
                     #PickingTime = np.random.exponential(15)
                     
                     StartServiceNextJobAtWS[WS] = t + PickingTime
@@ -350,7 +352,7 @@ def RunSimulation(TableNumber, nrRuns, k, b1):
 
 
 def GenerateResults(TableNumber,k, b1):
-    nrRuns = 5
+    nrRuns = 10
     ThroughputResults =[]
     AverageDelayMove1 = []
     AverageDelayMove2 = []
@@ -394,73 +396,29 @@ def GenerateResults(TableNumber,k, b1):
     else:
         N = 14
     print(N, 'k:', k, 'b:', b1, 'Throughput:', mTH)
-    return mTH, CI_TH, mD1, CI_D1, mD2, CI_D2, mD3, CI_D3, PickingTimes
-
-
-#GenerateResults(2,2,0)
-#GenerateResults(4,2,0)
-#GenerateResults(6,2,0)
-#GenerateResults(2,5,0.6)
-#GenerateResults(4,5,0.6)
-#GenerateResults(6,5,0.6)
-#GenerateResults(2,5,0.8)
-#enerateResults(4,5,0.8)
-#PickingTimes_N14_k5_b08 = GenerateResults(6,5,0.8)[8]
-#PickingTimes_N14_k5_b1 = GenerateResults(6,5,1)[8]
-
-#N2Results_k2cox_8 = GenerateResults(2,2,0.8)
-#N2Results_k2cox_6 = GenerateResults(2,2,0.6)
-#N2Results_k5cox_8 = GenerateResults(2,5,0.8)
-#N2Results_k5cox_6 = GenerateResults(2,5,0.6)
-#print('COMPLETE: 1/3')
-#N8Results_k2cox_8 = GenerateResults(4,2,0.8)
-#N8Results_k2cox_6 = GenerateResults(4,2,0.6)
-#N8Results_k5cox_8 = GenerateResults(4,5,0.8)
-#N8Results_k5cox_6 = GenerateResults(4,5,0.6)
-#print('COMPLETE: 2/3')
-#N14Results_k2cox_8 = GenerateResults(6,2,0.8)
-#N14Results_k2cox_6 = GenerateResults(6,2,0.6)
-#N14Results_k5cox_8 = GenerateResults(6,5,0.8)
-#N14Results_k5cox_6 = GenerateResults(6,5,0.6)
-    
-#N2Results_k2cox_00 = GenerateResults(2,2,0)
-#N8Results_k2cox_00 = GenerateResults(4,2,0)
-#N14Results_k2cox_00 = GenerateResults(6,2,0)
-#N2Results_k2cox_06 = GenerateResults(2,2,0.6)
-#N8Results_k2cox_06 = GenerateResults(4,2,0.6)
-#N14Results_k2cox_06 = GenerateResults(6,2,0.6)
-#N14Results_k2cox_6 = GenerateResults(6,2,0.6)
-#N14Results_k5cox_8 = GenerateResults(6,5,0.8)
-#N14Results_k5cox_6 = GenerateResults(6,5,0.6)
-N2Results_k2TEST = GenerateResults(2,2,1)
-N2Results_k2cox_06TEST = GenerateResults(2,2,0.6)
-
-N2Results_k2cox_06TEST = GenerateResults(2,2,0.8)
-
-#N2Results_k5cox_06 = GenerateResults(6,5,0.6)
+    #return mTH, CI_TH, mD1, CI_D1, mD2, CI_D2, mD3, CI_D3, PickingTimes
+    return mTH
 
 
 
-#N2Results_k1 = GenerateResults(2,1,1)
-#N8Results_k1 = GenerateResults(4,1,1)
-#N14Results_k1 = GenerateResults(6,1,1)
-#print('COMPLETE: 1/6')
-#N2Results_k2 = GenerateResults(2,2,1)
-#N8Results_k2 = GenerateResults(4,2,1)
-#N14Results_k2 = GenerateResults(6,2,1)
-#print('COMPLETE: 2/6')
-#N2Results_k3 = GenerateResults(2,3,1)
-#N8Results_k3 = GenerateResults(4,3,1)
-#14Results_k3 = GenerateResults(6,3,1)
-#print('COMPLETE: 3/6')
-#N2Results_k4 = GenerateResults(2,4,1)
-#N8Results_k4 = GenerateResults(4,4,1)
-#N14Results_k4 = GenerateResults(6,4,1)
-#print('COMPLETE: 4/6')
-#N2Results_k5 = GenerateResults(2,5,1)
-#N8Results_k5 = GenerateResults(4,5,1)
-#N14Results_k5 = GenerateResults(6,5,1)
-#print('COMPLETE: 5/6')
-#N2Results_k10 = GenerateResults(2,10,1)
-#N8Results_k10 = GenerateResults(4,10,1)
-#N14Results_k10 = GenerateResults(6,10,1)
+ResultsData = pd.DataFrame(columns=['N', 'k', 'b', 'TH'])
+#b1values = [1,0.8,0.6,0]
+b1values = [1]
+values = [2,3,4,5,10]
+for s in range(len(b1values)):
+    b = b1values[s]
+    for i in range(len(values)):
+        print(values[i])
+        Re = GenerateResults(2,values[i], b)
+        Res = pd.DataFrame([[2, values[i], b, Re]], columns=['N', 'k', 'b', 'TH'])
+        ResultsData = ResultsData.append(Res,ignore_index=True)
+    for i in range(len(values)):
+        Re = GenerateResults(4,values[i], b)
+        Res = pd.DataFrame([[8, values[i], b, Re]], columns=['N', 'k', 'b', 'TH'])
+        ResultsData = ResultsData.append(Res,ignore_index=True)
+    for i in range(len(values)):
+        Re = GenerateResults(6,values[i], b)
+        Res = pd.DataFrame([[14, values[i], b, Re]], columns=['N', 'k', 'b', 'TH'])
+        ResultsData = ResultsData.append(Res,ignore_index=True)
+print('The results can be found in the table "ResultsData" in the variable explorer')
+
